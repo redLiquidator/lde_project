@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sales">
+
+  <select id="cdCount" resultType="java.util.HashMap">
+    SELECT A.AREA_CD AREA_CD, B.CD_NM CD_NM
+    FROM JYP_SALE_TBL A, CD_ID_TEMP B
+    WHERE A.AREA_CD=B.CD_ID
+    GROUP BY A.AREA_CD, B.CD_NM
+    HAVING COUNT(*)>0
+    ORDER BY 1
+  </select>
+
+  <select id="salesList" parameterType="com.example.project0529.sales.model.Sales" resultType="java.util.HashMap">
+      SELECT DECODE(GROUPING(AREA_CD)||GROUPING(REGION_AREA),'00',MIN(CITY)||'=>'||REGION_AREA,'01',MIN(CITY)||'총계','11','총계') AS EXPT_RT
+            ,SUM(DECODE(PROD_ID,'00001',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00001',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL1
+            ,SUM(DECODE(PROD_ID,'00002',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00002',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL2
+            ,SUM(DECODE(PROD_ID,'00003',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00003',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL3
+            ,SUM(DECODE(PROD_ID,'00004',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00004',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL4
+            ,SUM(DECODE(PROD_ID,'00005',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00005',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL5
+            ,SUM(DECODE(PROD_ID,'00006',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00006',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL6
+            ,SUM(DECODE(PROD_ID,'00007',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00007',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL7
+            ,SUM(DECODE(PROD_ID,'00008',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00008',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL8
+            ,SUM(DECODE(PROD_ID,'00009',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00009',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL9
+            ,SUM(DECODE(PROD_ID,'00010',SALES_CNT))||' ('||ROUND(SUM(DECODE(PROD_ID,'00010',SALES_CNT))*100 /SUM(SALES_CNT),1)||'%)' COL10
+            ,SUM(SALES_CNT) TOT
+      FROM
+         (SELECT A.AREA_CD, MAX(B.CD_NM) CITY, A.PROD_ID, A.REGION_AREA, SUM(A.SALES_CNT) SALES_CNT
+         FROM JYP_SALE_TBL A, CD_ID_TEMP B, PROD_ID_TEMP C
+         WHERE A.AREA_CD = B.CD_ID AND A.PROD_ID=C.PROD_ID
+         <if test="area_cd != null">
+                  AND  A.AREA_CD IN (SELECT CD_ID
+                               FROM CD_TBL
+                               WHERE LENGTH(CD_ID) = 2
+                               AND  CD_ID IN (${area_cd}))
+         </if>
+          GROUP BY A.AREA_CD, A.REGION_AREA, A.PROD_ID
+          ORDER BY AREA_CD, REGION_AREA, PROD_ID)
+      GROUP BY ROLLUP(AREA_CD, REGION_AREA)
+  </select>
+</mapper>
